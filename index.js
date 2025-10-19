@@ -20,14 +20,21 @@ async function run() {
     });
 
 
-    // ✅ Add Student Result (Admin)
+    // Add Student Result (Admin)
     app.post("/add-student", async (req, res) => {
       const data = req.body;
       const result = await students.insertOne(data);
       res.send({ success: true, id: result.insertedId });
     });
 
-    // 🔍 Find Student Result (Student)
+    // all student
+    app.get('/students', async (req, res) =>{
+      const cursor = students.find();
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+
+    // Find Student Result (Student)
     app.post("/find-student", async (req, res) => {
       const { roll, reg, board, exam, year } = req.body;
       const result = await students.findOne({
@@ -45,7 +52,7 @@ async function run() {
       res.send({ success: true, result });
     });
 
-    app.listen(5000, () => console.log("✅ Server running on port http://localhost:5000 "));
+    app.listen(5000, () => console.log(" Server running on port http://localhost:5000 "));
   } catch (error) {
     console.error(error);
   }
