@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
+const { ObjectId } = require("mongodb");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
@@ -12,28 +13,25 @@ app.use(express.json());
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
 
-// Middleware to check if user is admin (inline in index.js)
-const checkAdmin = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1]; // Get token from Authorization header
 
+const checkAdmin = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
     return res.status(401).send({ message: 'Authorization token is required' });
   }
 
   try {
-    // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Check if the user is in the admin collection and if they have an "admin" role
     const db = client.db("resultDB");
     const admins = db.collection("admins");
-    const admin = await admins.findOne({ _id: decoded.id });
+
+    // Convert id string to ObjectId
+    const admin = await admins.findOne({ _id: new ObjectId(decoded.id) });
 
     if (!admin || admin.role !== 'admin') {
       return res.status(403).send({ message: 'You do not have permission to perform this action' });
     }
 
-    // If the user is an admin, proceed to the next middleware/route
     req.admin = admin;
     next();
   } catch (err) {
